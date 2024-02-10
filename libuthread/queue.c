@@ -4,18 +4,35 @@
 
 #include "queue.h"
 
+typedef struct Node {
+    // Linked list implementation
+    void *data; // Can handle any data type // TODO: change to int if conceptually difficult to use
+    struct Node *next;
+} node;
+
 struct queue {
-	/* TODO Phase 1 */
+    int numNodes;
+    struct Node *front;
+    struct Node *rear;
 };
 
 queue_t queue_create(void)
 {
-	/* TODO Phase 1 */
+	queue_t queue = /* TODO: Malloc call based on queue size */
+
+    // Initialize vars
+    queue->numNodes = 0;
+    queue->front = NULL;
+    queue->rear = NULL;
+
+    return queue;
 }
 
 int queue_destroy(queue_t queue)
 {
-	/* TODO Phase 1 */
+	/* TODO: error check */
+    free(queue);
+    return 0;
 }
 
 int queue_enqueue(queue_t queue, void *data)
@@ -40,6 +57,7 @@ int queue_iterate(queue_t queue, queue_func_t func)
 
 int queue_length(queue_t queue)
 {
-	/* TODO Phase 1 */
+    /* TODO: error check */
+	return queue->numNodes;
 }
 
