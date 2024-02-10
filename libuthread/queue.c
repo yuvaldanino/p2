@@ -8,20 +8,24 @@ typedef struct Node {
     // Linked list implementation
     void *data; // Can handle any data type // TODO: change to int if conceptually difficult to use
     struct Node *next;
-} node;
+} qNode;
 
 struct queue {
-    int numNodes;
-    struct Node *front;
-    struct Node *rear;
+    int length;
+    // Front and rear used for O(1) implementation (no looping thru queue)
+    qNode *front;
+    qNode *rear;
 };
 
 queue_t queue_create(void)
 {
-	queue_t queue = /* TODO: Malloc call based on queue size */
+    // queue_t queue should now point to a spot in the heap
+    queue_t queue = malloc(sizeof(queue));
+    if (queue == NULL)
+        return NULL;
 
     // Initialize vars
-    queue->numNodes = 0;
+    queue->length = 0;
     queue->front = NULL;
     queue->rear = NULL;
 
@@ -30,34 +34,74 @@ queue_t queue_create(void)
 
 int queue_destroy(queue_t queue)
 {
-	/* TODO: error check */
+	if (queue == NULL || queue->front != NULL)
+        return -1;
+
     free(queue);
     return 0;
 }
 
 int queue_enqueue(queue_t queue, void *data)
 {
-	/* TODO Phase 1 */
+    if (queue == NULL || data == NULL)
+        return -1;
+
+    // Allocate for new node
+    qNode *newNode = malloc(sizeof(qNode));
+    if (newNode == NULL)
+        return -1;
+    newNode->data = data;
+    newNode->next = NULL;
+
+    // Size 0: front = rear
+    // Size >= 1: front != rear
+    if (queue->length == 0) {
+        queue->front = newNode;
+        queue->rear = newNode;
+    } else {
+        queue->rear->next = newNode;
+        queue->rear = newNode;
+        // TODO: might need to set newNode->next, but I don't think it's needed
+    }
+
+    return 0;
 }
 
 int queue_dequeue(queue_t queue, void **data)
 {
+    if (queue == NULL || data == NULL || queue->front != NULL)
+        return -1;
+
 	/* TODO Phase 1 */
+
+    return 0;
 }
 
 int queue_delete(queue_t queue, void *data)
 {
+    if (queue == NULL || data == NULL)
+        return -1;
+
 	/* TODO Phase 1 */
+
+    return 0;
 }
 
 int queue_iterate(queue_t queue, queue_func_t func)
 {
+    if (queue == NULL || func == NULL)
+        return -1;
+
 	/* TODO Phase 1 */
+
+    return 0;
 }
 
 int queue_length(queue_t queue)
 {
-    /* TODO: error check */
-	return queue->numNodes;
+    if (queue == NULL)
+        return -1;
+
+	return queue->length;
 }
 
