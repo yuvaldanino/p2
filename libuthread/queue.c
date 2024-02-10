@@ -3,6 +3,7 @@
 #include <string.h>
 
 #include "queue.h"
+#include <stdio.h> // TODO: DELETE
 
 typedef struct Node {
     // Linked list implementation
@@ -34,7 +35,7 @@ queue_t queue_create(void)
 
 int queue_destroy(queue_t queue)
 {
-	if (queue == NULL || queue->front != NULL)
+	if (queue == NULL || queue->length > 0)
         return -1;
 
     free(queue);
@@ -63,16 +64,46 @@ int queue_enqueue(queue_t queue, void *data)
         queue->rear = newNode;
         // TODO: might need to set newNode->next, but I don't think it's needed
     }
+    queue->length++;
+    printf("############\n");
+    printf("New node addr: %p\n", queue->rear->data);
 
     return 0;
 }
 
 int queue_dequeue(queue_t queue, void **data)
 {
-    if (queue == NULL || data == NULL || queue->front != NULL)
+    // TODO: DELETE PRINT STMTS
+    printf("############\n");
+    printf("Dequeue called with queue: %p, data: %p\n", (void*)queue, (void*)data);
+    printf("Queue length before dequeue: %d\n", queue->length);
+
+    /*
+     * For my reference: void **data is used to pass by reference,
+     * so that the &ptr passed in can be modified directly,
+     * instead of just doing ptr=data which would pass by value
+     */
+
+    if (queue == NULL || data == NULL || queue->length == 0)
         return -1;
 
-	/* TODO Phase 1 */
+	qNode *oldestNode = queue->front; // Since queue->front points to a node in the heap
+    printf("Oldest node address: %p, Oldest node data: %p\n", (void*)oldestNode, oldestNode->data);
+
+    *data = oldestNode->data; // Deref to modify ptr by ref instead of value (data)
+    printf("Data to be returned: %p\n", *data);
+
+    queue->front = queue->front->next;
+    queue->length--;
+    // Rear is still pointing to the removed node in this case below
+    if (queue->length == 0)
+        queue->rear = NULL;
+    printf("New queue front: %p, New queue rear: %p\n", (void*)queue->front, (void*)queue->rear);
+    printf("Queue length after dequeue: %d\n", queue->length);
+    printf("############\n");
+
+    // *data has the data, this node is no longer needed
+    free(oldestNode);
 
     return 0;
 }
