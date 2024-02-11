@@ -129,8 +129,15 @@ int queue_iterate(queue_t queue, queue_func_t func)
 {
     if (queue == NULL || func == NULL)
         return -1;
-
-	/* TODO Phase 1 */
+    
+    qNode *currNode = queue->front;
+    // curr->next is inaccessible if it's deleted, so we need to save nextNode beforehand
+    qNode *nextNode;
+    while(currNode != NULL) {
+        nextNode = currNode->next;
+        func(queue, currNode->data); // use queue not &queue since queue is already a ptr
+        currNode = nextNode;
+    }
 
     return 0;
 }
