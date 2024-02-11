@@ -76,7 +76,6 @@ int queue_dequeue(queue_t queue, void **data)
      * so that the &ptr passed in can be modified directly,
      * instead of just doing ptr=data which would pass by value
      */
-
     if (queue == NULL || data == NULL || queue->length == 0)
         return -1;
 
@@ -101,9 +100,29 @@ int queue_delete(queue_t queue, void *data)
     if (queue == NULL || data == NULL)
         return -1;
 
-	/* TODO Phase 1 */
+    // iterate thru queue until match
+    qNode *currNode = queue->front;
+    qNode *prevNode = NULL; // for rewiring
+    while(currNode != NULL) {
+        if (currNode->data == data) {
+            // if front is a match, if rear is a match, if middle is a match
+            if (prevNode == NULL)
+                queue->front = queue->front->next;
+            else if (currNode == queue->rear)
+                queue->rear = prevNode;
+                prevNode->next = NULL; // TODO: Is this line needed?
+            else
+                prevNode->next = currNode->next;
 
-    return 0;
+            free(currNode);
+            queue->length--;
+            return 0;
+        }
+        currNode = currNode->next;
+        prevNode = prevNode->next;
+    }
+
+    return -1;
 }
 
 int queue_iterate(queue_t queue, queue_func_t func)
