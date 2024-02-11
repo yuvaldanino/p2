@@ -7,7 +7,7 @@
 
 typedef struct Node {
     // Linked list implementation
-    void *data; // Can handle any data type // TODO: change to int if conceptually difficult to use
+    void *data; // Can handle any data type
     struct Node *next;
 } qNode;
 
@@ -21,7 +21,7 @@ struct queue {
 queue_t queue_create(void)
 {
     // queue_t queue should now point to a spot in the heap
-    queue_t queue = malloc(sizeof(queue));
+    queue_t queue = malloc(sizeof(*queue));
     if (queue == NULL)
         return NULL;
 
@@ -65,19 +65,12 @@ int queue_enqueue(queue_t queue, void *data)
         // TODO: might need to set newNode->next, but I don't think it's needed
     }
     queue->length++;
-    printf("############\n");
-    printf("New node addr: %p\n", queue->rear->data);
 
     return 0;
 }
 
 int queue_dequeue(queue_t queue, void **data)
 {
-    // TODO: DELETE PRINT STMTS
-    printf("############\n");
-    printf("Dequeue called with queue: %p, data: %p\n", (void*)queue, (void*)data);
-    printf("Queue length before dequeue: %d\n", queue->length);
-
     /*
      * For my reference: void **data is used to pass by reference,
      * so that the &ptr passed in can be modified directly,
@@ -88,19 +81,14 @@ int queue_dequeue(queue_t queue, void **data)
         return -1;
 
 	qNode *oldestNode = queue->front; // Since queue->front points to a node in the heap
-    printf("Oldest node address: %p, Oldest node data: %p\n", (void*)oldestNode, oldestNode->data);
 
     *data = oldestNode->data; // Deref to modify ptr by ref instead of value (data)
-    printf("Data to be returned: %p\n", *data);
 
     queue->front = queue->front->next;
     queue->length--;
     // Rear is still pointing to the removed node in this case below
     if (queue->length == 0)
         queue->rear = NULL;
-    printf("New queue front: %p, New queue rear: %p\n", (void*)queue->front, (void*)queue->rear);
-    printf("Queue length after dequeue: %d\n", queue->length);
-    printf("############\n");
 
     // *data has the data, this node is no longer needed
     free(oldestNode);
