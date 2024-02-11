@@ -103,6 +103,7 @@ int queue_delete(queue_t queue, void *data)
     // iterate thru queue until match
     qNode *currNode = queue->front;
     qNode *prevNode = NULL; // for rewiring
+
     while(currNode != NULL) {
         if (currNode->data == data) {
             // if front is a match, if rear is a match, if middle is a match
@@ -114,13 +115,12 @@ int queue_delete(queue_t queue, void *data)
             } else {
                 prevNode->next = currNode->next;
             }
-
             free(currNode);
             queue->length--;
             return 0;
         }
+        prevNode = currNode;
         currNode = currNode->next;
-        prevNode = prevNode->next;
     }
 
     return -1;
@@ -149,5 +149,43 @@ int queue_length(queue_t queue)
         return -1;
 
 	return queue->length;
+}
+
+// TODO: Del
+int queue_print(queue_t queue)
+{
+    printf("## START QUEUE INFO ##\n");
+    if (queue == NULL) {
+        printf("Queue null\n");
+        return -1;
+    }
+    if (queue->length == 0) {
+        printf("Queue empty\n");
+        return -1;
+    }
+
+    int index = 0;
+    qNode *currNode = queue->front;
+    qNode *nextNode;
+    while(currNode != NULL) {
+        nextNode = currNode->next;
+
+        int *currData = currNode->data;
+        printf("Index: %d | Addr: %p | Value: %d\n", index, currData, *currData);
+
+        currNode = nextNode;
+        index++;
+    }
+    printf("## END QUEUE INFO ##\n");
+
+    return 0;
+}
+int use_q(queue_t queue)
+{
+    if (queue != NULL) {
+        return 0;
+    } else {
+        return 1;
+    }
 }
 
