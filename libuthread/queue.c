@@ -111,7 +111,7 @@ int queue_delete(queue_t queue, void *data)
                 queue->front = queue->front->next;
             } else if (currNode == queue->rear) {
                 queue->rear = prevNode;
-                prevNode->next = NULL; // TODO: Is this line needed?
+                prevNode->next = NULL; // TODO: Is this line needed? Make a tester to figure this out
             } else {
                 prevNode->next = currNode->next;
             }
