@@ -32,7 +32,7 @@ int uthread_run(bool preempt, uthread_func_t func, void *arg);
  * @arg: Argument to be passed to the thread
  *
  * This function creates a new thread running the function @func to which
- * argument @arg is passed.
+ * argument @arg is passed. 
  *
  * Return: 0 in case of success, -1 in case of failure (e.g., memory allocation,
  * context creation).
