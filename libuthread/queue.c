@@ -106,13 +106,14 @@ int queue_delete(queue_t queue, void *data)
     while(currNode != NULL) {
         if (currNode->data == data) {
             // if front is a match, if rear is a match, if middle is a match
-            if (prevNode == NULL)
+            if (prevNode == NULL) {
                 queue->front = queue->front->next;
-            else if (currNode == queue->rear)
+            } else if (currNode == queue->rear) {
                 queue->rear = prevNode;
                 prevNode->next = NULL; // TODO: Is this line needed?
-            else
+            } else {
                 prevNode->next = currNode->next;
+            }
 
             free(currNode);
             queue->length--;
@@ -129,7 +130,7 @@ int queue_iterate(queue_t queue, queue_func_t func)
 {
     if (queue == NULL || func == NULL)
         return -1;
-    
+
     qNode *currNode = queue->front;
     // curr->next is inaccessible if it's deleted, so we need to save nextNode beforehand
     qNode *nextNode;
