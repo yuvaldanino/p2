@@ -1,10 +1,9 @@
 # Target programs
 programs := \
 	queue_tester.x \
-	queue_tester_example.x \
-#	uthread_hello.x \
+	uthread_hello.x \
 	uthread_yield.x
-# TODO: uncomment ^
+
 # User-level thread library
 UTHREADLIB := libuthread
 UTHREADPATH := ../$(UTHREADLIB)
@@ -77,4 +76,41 @@ clean: FORCE
 .PRECIOUS: %.o
 .PHONY: FORCE
 FORCE:
+
+
+
+
+## Compiler
+#CC = gcc
+#
+## Compiler flags
+#CFLAGS = -Wall -Wextra -Werror -g
+## Add any additional flags here
+#
+## Source files for queue tester example and uthread_hello
+#QUEUE_TESTER_SRCS = queue_tester.c
+#UTHREAD_HELLO_SRCS = uthread_hello.c
+#
+## Object files
+#QUEUE_TESTER_OBJS = $(QUEUE_TESTER_SRCS:.c=.o)
+#UTHREAD_HELLO_OBJS = $(UTHREAD_HELLO_SRCS:.c=.o)
+#
+## Targets
+#all: queue_tester.x uthread_hello.x
+#
+## Compilation rules
+#%.o: %.c
+#	$(CC) $(CFLAGS) -c $< -o $@
+#
+## Linking rule for queue tester
+#queue_tester.x: $(QUEUE_TESTER_OBJS)
+#	$(CC) $(CFLAGS) $^ -o $@
+#
+## Linking rule for uthread_hello
+#uthread_hello.x: $(UTHREAD_HELLO_OBJS)
+#	$(CC) $(CFLAGS) $^ -o $@
+#
+## Clean rule
+#clean:
+#	rm -f $(QUEUE_TESTER_OBJS) $(UTHREAD_HELLO_OBJS) queue_tester.x uthread_hello.x
 

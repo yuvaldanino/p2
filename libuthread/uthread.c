@@ -72,8 +72,6 @@ void uthread_yield(void)
 
 	//select the next thread to run 
 	struct uthread_tcb *next_thread = NULL;
-
-	int dequeVal = queue_dequeue(qSched, (void **)&next_thread);
 	
 	/*
 	if(dequeVal != 0){
@@ -82,13 +80,14 @@ void uthread_yield(void)
 	}
 	*/
 
-	//swicth to context of next thread 
-	if(dequeVal == 0 && next_thread!= NULL){
-		swapcontext(&current_thread->context, &next_thread->context);
-	}
+    while (queue_dequeue(qSched, (void **)&next_thread) == 0) {
+        if (next_thread != NULL && next_thread->state == UTHREAD_READY) {
+            // Switch to the context of the next ready thread
+            swapcontext(&current_thread->context, &next_thread->context);
+        }
+    }
 
-
-	//update scheduler 
+	// update scheduler
 	// add saved state to the queue if its ready 
 	if (current_thread->state == UTHREAD_READY) {
         queue_enqueue(qSched, current_thread);
@@ -101,7 +100,20 @@ void uthread_yield(void)
 
 void uthread_exit(void)
 {
-	/* TODO Phase 2 */
+    struct uthread_tcb *current_thread = uthread_current();
+
+    current_thread->state = UTHREAD_FINISHED;
+
+    active_thread_count--;
+
+    // Select the next thread to run
+    struct uthread_tcb *next_thread = NULL;
+    while (queue_dequeue(qSched, (void **)&next_thread) == 0) {
+        if (next_thread != NULL && next_thread->state == UTHREAD_READY) {
+            // Switch to the context of the next ready thread
+            setcontext(&next_thread->context);
+        }
+    }
 }
 
 int uthread_create(uthread_func_t func, void *arg)
@@ -155,7 +167,7 @@ int uthread_create(uthread_func_t func, void *arg)
 		perror("failed to add thread to queue");
         return -1;
 	}
-	//add to active_thread_coiunt to show we have a new active thread 
+	//add to active_thread_count to show we have a new active thread
 	active_thread_count++;
 
 	//return 0 success 
@@ -203,15 +215,9 @@ int uthread_run(bool preempt, uthread_func_t func, void *arg)
 
 
 	}
-	
 	//cleanup?
 
-
 	return 0;
-
-
-
-
 }
 
 void uthread_block(void)
