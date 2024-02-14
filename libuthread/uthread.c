@@ -60,13 +60,42 @@ void uthread_yield(void)
 	// save current thread context to ensure we can resume it later
 	// need to first get current thread (function above)
 	struct uthread_tcb *current_thread = uthread_current();
+	printf("Yield: Current thread TCB address: %p, State: %d\n", (void *)current_thread, current_thread->state);
+
     // select the next thread to run
     struct uthread_tcb *next_thread;
 
     int dequeue_res = queue_dequeue(readyQ, (void **)&next_thread);
-    if (dequeue_res == -1)
+    if (dequeue_res == -1){
+		printf("Yield: Queue is empty, no thread to switch to\n");
         return;
+	}
 
+	if (dequeue_res == 0) {
+        printf("Yield: Dequeued next thread TCB address: %p, State: %d\n", (void *)next_thread, next_thread->state);
+
+        // Mark the current thread as ready and re-enqueue it
+        current_thread->state = UTHREAD_READY;
+        printf("Yield: Enqueuing current thread TCB address: %p\n", (void *)current_thread);
+        int enqueue_res = queue_enqueue(readyQ, current_thread);
+        if (enqueue_res == -1) {
+            printf("Yield: Error enqueuing current thread TCB address: %p\n", (void *)current_thread);
+            return;
+        }
+
+        // Update global current thread pointer and state
+        current_thread_tcb = next_thread;
+        next_thread->state = UTHREAD_RUNNING;
+        printf("Yield: About to switch context from current thread TCB address: %p to next thread TCB address: %p\n", (void *)current_thread, (void *)next_thread);
+
+        // Perform the context switch
+        uthread_ctx_switch(&current_thread->context, &next_thread->context);
+
+        // This line will be executed when control returns to this thread
+        printf("Yield: Returned to current thread TCB address: %p, State: %d\n", (void *)current_thread, current_thread->state);
+    }
+
+	/*
     // curr thread is ready -- enqueue and change state
     int enqueue_res = queue_enqueue(readyQ, current_thread);
     if (enqueue_res == -1)
@@ -79,6 +108,7 @@ void uthread_yield(void)
     // After returning from context switch, update the global current thread and its state
     current_thread_tcb = next_thread;
     next_thread->state = UTHREAD_RUNNING;
+	*/
 }
 
 void uthread_exit(void)
@@ -107,6 +137,7 @@ void uthread_exit(void)
 
     current_thread_tcb = next_thread;
     next_thread->state = UTHREAD_RUNNING;
+	active_thread_count--;
 
     // No need to save the current context since we're not coming back
     setcontext(&next_thread->context);
@@ -131,6 +162,9 @@ int uthread_create(uthread_func_t func, void *arg)
 
 	// need to change stack size 
 	void *top_of_stack = tcb->stack + STACK_SIZE;
+
+	printf("Setting up thread context to point to function: %p\n", (void *)func);
+
 
 	//initialize context
 	int init_thread_val = uthread_ctx_init(&tcb->context, top_of_stack, func, arg);
@@ -162,21 +196,7 @@ int uthread_create(uthread_func_t func, void *arg)
 	return 0;
 }
 
-/*
- * uthread_run - Run the multithreading library
- * @preempt: Preemption enable
- * @func: Function of the first thread to start
- * @arg: Argument to be passed to the first thread
- *
- * This function should only be called by the process' original execution
- * thread. It starts the multithreading scheduling library, and becomes the
- * "idle" thread. It returns once all the threads have finished running.
- *
- * If @preempt is `true`, then preemptive scheduling is enabled.
- *
- * Return: 0 in case of success, -1 in case of failure (e.g., memory allocation,
- * context creation).
- */
+
 int uthread_run(bool preempt, uthread_func_t func, void *arg)
 {
 	// initialize ready threads queue
@@ -191,8 +211,6 @@ int uthread_run(bool preempt, uthread_func_t func, void *arg)
 	if(threadVal == -1) {
 		perror("cant create idle thread");
 		return -1;
-	}else {
-		printf("finished uthread create\n");
 	}
 
 	// enable preemptive scheduling
@@ -203,12 +221,16 @@ int uthread_run(bool preempt, uthread_func_t func, void *arg)
 	//while loop with original thread which runs as idle thread 
 	while(true) {
         // break if only idle thread is left
+		uthread_yield();
         if (queue_length(readyQ) == 1)
             break;
 
 		//yield execution to next ready thread
-		uthread_yield();
+		//uthread_yield();
+		
 	}
+	
+	fprintf(stderr, "thread count: %d\n", active_thread_count);
 
     queue_destroy(readyQ);
     // TODO: Uncomment below? Probably?

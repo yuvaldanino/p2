@@ -14,6 +14,7 @@ void hello(void *arg)
 {
 	(void)arg;
 
+
 	printf("Hello world!\n");
 }
 
@@ -22,6 +23,8 @@ int main(void)
 	printf("started\n");
 
 	uthread_run(false, hello, NULL);
+
+	printf("done\n");
 
 	return 0;
 }
