@@ -7,7 +7,7 @@ CC := gcc
 CFLAGS := -g # Add your desired flags here
 
 # Application directory
-APP_DIR := /home/ydanino/p2/apps
+APP_DIR := ../apps
 
 # Include directory for uthread.h
 INCLUDE_DIR := . # Adjust if uthread.h is in a different directory
