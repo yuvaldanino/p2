@@ -1,20 +1,45 @@
-# Target library
+# Target library and executable
 lib := libuthread.a
-CC		:= gcc
-# CFLAGS	:= -Wall -Wextra -Werror
-CFLAGS	+= -g
+executable := uthread_hello.x
 
-all: $(lib)
+# Compiler and flags
+CC := gcc
+CFLAGS := -g # Add your desired flags here
 
-$(lib): queue.o uthread.o
+# Application directory
+APP_DIR := /home/ydanino/p2/apps
+
+# Include directory for uthread.h
+INCLUDE_DIR := . # Adjust if uthread.h is in a different directory
+
+# Default target
+all: $(lib) $(executable)
+
+# Library compilation
+$(lib): queue.o uthread.o context.o preempt.o
 	ar rcs $@ $^
 
-# TODO: use -MMD and $(deps) to automatically track .h dependencies
 queue.o: queue.c queue.h
-	$(CC) $(CFLAGS) -c -o $@ $<
+	$(CC) $(CFLAGS) -c $<
 
-uthread.o: uthread.c uthread.h private.h # TODO: fix this line
-	$(CC) $(CFLAGS) -c -o $@ $<
+uthread.o: uthread.c uthread.h private.h
+	$(CC) $(CFLAGS) -c $<
 
+context.o: context.c private.h
+	$(CC) $(CFLAGS) -c $<
+
+preempt.o: preempt.c # Add any headers this depends on
+	$(CC) $(CFLAGS) -c $<
+
+# Executable compilation
+$(executable): $(APP_DIR)/uthread_hello.o
+	$(CC) $(CFLAGS) $< -L. -luthread -o $@
+
+$(APP_DIR)/uthread_hello.o: $(APP_DIR)/uthread_hello.c
+	$(CC) $(CFLAGS) -I$(INCLUDE_DIR) -c $< -o $@
+
+# Clean
 clean:
-	rm -f $(lib) queue.o uthread.o
+	rm -f $(lib) *.o $(APP_DIR)/*.o $(executable)
+
+.PHONY: clean

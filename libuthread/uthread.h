@@ -3,6 +3,9 @@
 
 #include <stdbool.h>
 
+extern int active_thread_count;
+
+
 /*
  * uthread_func_t - Thread function type
  * @arg: Argument to be passed to the thread

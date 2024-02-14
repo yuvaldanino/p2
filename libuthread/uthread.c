@@ -23,6 +23,9 @@ queue_t qSched;
 // used for while loop in run function
 int active_thread_count = 0;
 
+static struct uthread_tcb *current_thread_tcb = NULL;
+
+
 
 typedef enum {
 	//states of threads
@@ -48,7 +51,7 @@ struct uthread_tcb {
 
 struct uthread_tcb *uthread_current(void)
 {
-	/* TODO Phase 2/3 */
+	return current_thread_tcb;
 }
 
 
@@ -61,14 +64,17 @@ struct uthread_tcb *uthread_current(void)
 void uthread_yield(void)
 {
 	/* TODO Phase 2 */
-
 	//save current thread context to ensure we can resume it later 
 	//need to first get current thread (function above)
 	struct uthread_tcb *current_thread = uthread_current();
+	//printf("passed here \n");
+
 	getcontext(&current_thread->context);
+	//printf("get context probelm\n");
 
 	//update the current thread state as its no longer running but ready to run 
 	current_thread->state = UTHREAD_READY;
+	//printf("changing state\n");
 
 	//select the next thread to run 
 	struct uthread_tcb *next_thread = NULL;
@@ -79,11 +85,14 @@ void uthread_yield(void)
 		printf("error dequeuing thread\n");
 	}
 	*/
-
+	printf("entering the yield while loop\n");
     while (queue_dequeue(qSched, (void **)&next_thread) == 0) {
         if (next_thread != NULL && next_thread->state == UTHREAD_READY) {
             // Switch to the context of the next ready thread
+			current_thread_tcb = next_thread;
             swapcontext(&current_thread->context, &next_thread->context);
+			current_thread_tcb = current_thread;
+			break;
         }
     }
 
@@ -148,6 +157,8 @@ int uthread_create(uthread_func_t func, void *arg)
 	// need to change stack size 
 	void *top_of_stack = tcb->stack + STACK_SIZE;
 
+	printf("here in code");
+
 	//initialize context
 	int init_thread_val = uthread_ctx_init(&tcb->context, top_of_stack, func, arg);
 	if (init_thread_val!= 0){
@@ -169,6 +180,8 @@ int uthread_create(uthread_func_t func, void *arg)
 	}
 	//add to active_thread_count to show we have a new active thread
 	active_thread_count++;
+
+	current_thread_tcb = tcb;
 
 	//return 0 success 
 	return 0;
@@ -195,24 +208,35 @@ int uthread_run(bool preempt, uthread_func_t func, void *arg)
 	/* TODO Phase 2 */
 	//intialize the queue for the threads 
 	qSched = queue_create();
+	if(qSched == NULL){
+		perror("failed to create queue");
+        return -1;
+	}else{
+		printf("Queue created\n");
+	}
 
 	//create the first thread 
 	int threadVal = uthread_create(func, arg);
 	if(threadVal < 0){
 		perror("cant create idle thread");
 		return -1;
+	}else{
+		printf("finished uthread create \n");
 	}
 
 	//enable preemptive scheduling 
-	if(preempt){
+	//if(preempt){
 		//do preempt sched
-	}
 
+	//}
+	printf("thread count:%d\n",active_thread_count);
+	fflush(stdout);
 	//while loop with original thread which runs as idle thread 
 	while(active_thread_count > 0){
-
+		printf("starting yield loop\n");
 		//yield execution to next ready thread
-
+		//active_thread_count--;
+		uthread_yield();
 
 	}
 	//cleanup?
