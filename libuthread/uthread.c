@@ -219,8 +219,6 @@ int uthread_run(bool preempt, uthread_func_t func, void *arg)
 
 	//while loop with original thread which runs as idle thread 
 	while(true) {
-        cleanup();
-
         // break if only idle thread is left
         if (queue_length(readyQ) <= 0)
             break;
