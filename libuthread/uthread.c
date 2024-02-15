@@ -19,12 +19,6 @@
 queue_t readyQ;
 queue_t finishedQ;
 
-// global ptrs for thread switching
-uthread_tcb *main_tcb,
-            *current_thread_tcb,
-            *previous_thread_tcb,
-            = NULL, NULL, NULL;
-
 // global bool keeps track of main thread (so as to not enqueue it)
 bool isMainThread = false; // TODO - might delete this - see run()
 
@@ -36,7 +30,7 @@ typedef enum {
 	UTHREAD_FINISHED,
 } uthread_state;
 
-struct uthread_tcb {
+typedef struct uthread_tcb {
 	// define TCB block:
 	//to save exec content (backup of CPU register )
 	uthread_ctx_t context;
@@ -44,7 +38,12 @@ struct uthread_tcb {
 	void* stack;
 	//current state of thread
 	uthread_state state;
-};
+} uthread_tcb;
+
+// global ptrs for thread switching
+uthread_tcb *main_tcb,
+            *current_thread_tcb,
+            *previous_thread_tcb;
 
 /*
  * uthread_yield - Yield execution
@@ -138,7 +137,7 @@ int uthread_create(uthread_func_t func, void *arg)
 	// initialize context
 	int init_thread_val = uthread_ctx_init(&tcb->context, tcb->stack, func, arg);
 	if (init_thread_val != 0) {
-        uthread_ctx_destroy_stack(top_of_stack);
+        uthread_ctx_destroy_stack(tcb->stack);
         free(tcb);
         perror("failed to init thread context");
         return -1;
@@ -158,7 +157,7 @@ int uthread_create(uthread_func_t func, void *arg)
 	int enqueue_res = queue_enqueue(readyQ, tcb);
     if (enqueue_res == -1) {
         free(tcb);
-        uthread_ctx_destroy_stack(top_of_stack);
+        uthread_ctx_destroy_stack(tcb->stack);
 		perror("failed to add thread to queue");
         return -1;
 	}
@@ -170,9 +169,9 @@ int uthread_create(uthread_func_t func, void *arg)
 void cleanup()
 {
     // Deallocate all of the parts of the finishedQ (readyQ should be empty already)
-    uthread_tcb *finished_thread = NULL;
+    struct uthread_tcb *finished_thread = NULL;
     while(queue_length(finishedQ) > 0) {
-        int dequeue_res = queue_dequeue(finishedQ, (void **)&finished_thread));
+        int dequeue_res = queue_dequeue(finishedQ, (void **)&finished_thread);
         if (dequeue_res != 0) {
             perror("Dequeue failed");
             return;
