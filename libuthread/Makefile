@@ -1,45 +1,37 @@
-# Target library and executable
-lib := libuthread.a
-executable := uthread_hello.x
-
 # Compiler and flags
 CC := gcc
-CFLAGS := -g # Add your desired flags here
+CFLAGS := -Wall -Wextra -g
+#-Werror  treats warning as errors (supposed to go after wall)
+# Target library
+lib := libuthread.a
 
-# Application directory
-APP_DIR := ../apps
+# Source and object files for the library
+srcs := queue.c uthread.c context.c preempt.c sem.c
+objs := $(srcs:.c=.o)
+deps := $(objs:.o=.d)
 
-# Include directory for uthread.h
-INCLUDE_DIR := . # Adjust if uthread.h is in a different directory
+# Control verbosity
+ifneq ($(V),1)
+Q = @
+endif
 
-# Default target
-all: $(lib) $(executable)
+all: $(lib)
+
+# Include dependency files
+-include $(deps)
 
 # Library compilation
-$(lib): queue.o uthread.o context.o preempt.o
-	ar rcs $@ $^
+$(lib): $(objs)
+	@echo "AR $@"
+	$(Q)ar rcs $@ $^
 
-queue.o: queue.c queue.h
-	$(CC) $(CFLAGS) -c $<
+# Object file compilation with automatic dependency generation
+%.o: %.c
+	@echo "CC $@"
+	$(Q)$(CC) $(CFLAGS) -MMD -c $< -o $@
 
-uthread.o: uthread.c uthread.h private.h
-	$(CC) $(CFLAGS) -c $<
-
-context.o: context.c private.h
-	$(CC) $(CFLAGS) -c $<
-
-preempt.o: preempt.c # Add any headers this depends on
-	$(CC) $(CFLAGS) -c $<
-
-# Executable compilation
-$(executable): $(APP_DIR)/uthread_hello.o
-	$(CC) $(CFLAGS) $< -L. -luthread -o $@
-
-$(APP_DIR)/uthread_hello.o: $(APP_DIR)/uthread_hello.c
-	$(CC) $(CFLAGS) -I$(INCLUDE_DIR) -c $< -o $@
-
-# Clean
 clean:
-	rm -f $(lib) *.o $(APP_DIR)/*.o $(executable)
+	@echo "Cleaning"
+	$(Q)rm -f $(lib) $(objs) $(deps)
 
-.PHONY: clean
+.PHONY: all clean

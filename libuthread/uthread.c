@@ -45,12 +45,19 @@ uthread_tcb *main_tcb = NULL;
 uthread_tcb *current_thread_tcb = NULL;
 uthread_tcb *previous_thread_tcb = NULL;
 
+uthread_tcb* uthread_current()
+{
+    return current_thread_tcb;
+}
+
+
 /*
  * uthread_yield - Yield execution
  *
  * This function is to be called from the currently active and running thread in
  * order to yield for other threads to execute.
  */
+
 void uthread_yield(void)
 {
 	// save current thread context to ensure we can resume it later
@@ -79,7 +86,7 @@ void uthread_yield(void)
     uthread_ctx_switch(&previous_thread_tcb->context, &current_thread_tcb->context);
 
     // Never come here
-    assert(0);
+    //assert(0);
 }
 
 // Same as yield(), but the old process is done, not ready, so it goes in a different queue
@@ -114,7 +121,7 @@ void uthread_exit(void)
 //    uthread_ctx_switch(&previous_thread_tcb->context, &current_thread_tcb->context);
 
     // Never come here
-    assert(0);
+    //assert(0);
 }
 
 int uthread_create(uthread_func_t func, void *arg)
@@ -158,6 +165,8 @@ int uthread_create(uthread_func_t func, void *arg)
 	return 0;
 }
 
+
+
 // Helper func to destroy finishedQ and readyQ
 void cleanup()
 {
@@ -184,6 +193,7 @@ void cleanup()
 
 int uthread_run(bool preempt, uthread_func_t func, void *arg)
 {
+
 	// initialize ready and finished threads queues
 	readyQ = queue_create();
     finishedQ = queue_create();
@@ -218,6 +228,7 @@ int uthread_run(bool preempt, uthread_func_t func, void *arg)
 
 	// enable preemptive scheduling
 	// if(preempt){ /* do something ... */ }
+    
 
 	//while loop with original thread which runs as idle thread 
 	while(true) {
@@ -255,7 +266,7 @@ void uthread_block(void)
     uthread_ctx_switch(&previous_thread_tcb->context, &current_thread_tcb->context);
 
     // Never come here
-    assert(0);
+    //assert(0);
 }
 
 void uthread_unblock(struct uthread_tcb *uthread)
@@ -268,6 +279,6 @@ void uthread_unblock(struct uthread_tcb *uthread)
         return;
     }
 
-    assert(0);
+    //assert(0);
 }
 

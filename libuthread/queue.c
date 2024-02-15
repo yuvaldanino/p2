@@ -76,8 +76,10 @@ int queue_dequeue(queue_t queue, void **data)
      * so that the &ptr passed in can be modified directly,
      * instead of just doing ptr=data which would pass by value
      */
-    if (queue == NULL || data == NULL || queue->length == 0)
+    if (queue == NULL || data == NULL || queue->length == 0){
         return -1;
+    }
+        
 
 	qNode *oldestNode = queue->front; // Since queue->front points to a node in the heap
 
@@ -86,8 +88,10 @@ int queue_dequeue(queue_t queue, void **data)
     queue->front = queue->front->next;
     queue->length--;
     // Rear is still pointing to the removed node in this case below
-    if (queue->length == 0)
+    if (queue->length == 0){
         queue->rear = NULL;
+    }
+        
 
     // *data has the data, this node is no longer needed
     free(oldestNode);
@@ -145,8 +149,10 @@ int queue_iterate(queue_t queue, queue_func_t func)
 
 int queue_length(queue_t queue)
 {
-    if (queue == NULL)
+    if (queue == NULL){
         return -1;
+    }
+        
 
 	return queue->length;
 }
