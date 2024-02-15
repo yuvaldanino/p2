@@ -25,6 +25,9 @@ uthread_tcb *main_tcb,
             *previous_thread_tcb,
             = NULL, NULL, NULL;
 
+// global bool keeps track of main thread (so as to not enqueue it)
+bool isMainThread = false; // TODO - might delete this - see run()
+
 typedef enum {
 	//states of threads
 	UTHREAD_RUNNING,
@@ -132,9 +135,7 @@ int uthread_create(uthread_func_t func, void *arg)
         return -1;
     }
 
-	printf("Setting up thread context to point to function: %p\n", (void *)func);
-
-	//initialize context
+	// initialize context
 	int init_thread_val = uthread_ctx_init(&tcb->context, tcb->stack, func, arg);
 	if (init_thread_val != 0) {
         uthread_ctx_destroy_stack(top_of_stack);
@@ -146,10 +147,14 @@ int uthread_create(uthread_func_t func, void *arg)
 	// If init successful, change thread to ready
 	tcb->state = UTHREAD_READY;
 
-	//add to scheduler queue 
-	// not sure if i should do this now or after 
-	// we dont have a queue anywhere, do we start queue in the run function 
-	//i stopped here to create uthread_run which has the queue in it(qSchd) 
+    // TODO: might need to delete this isMainThread - see bottom of run()
+    // special case: every thread EXCEPT the main/idle thread should be enqueued
+    // if main/idle is enqueued, we may never execute another thread
+    // use the global var to keep track of this
+    if (isMainThread)
+        return 0;
+
+	// Otherwise, add to ready queue as normal
 	int enqueue_res = queue_enqueue(readyQ, tcb);
     if (enqueue_res == -1) {
         free(tcb);
@@ -161,6 +166,26 @@ int uthread_create(uthread_func_t func, void *arg)
 	return 0;
 }
 
+// Helper func to destroy finishedQ and readyQ
+void cleanup()
+{
+    // Deallocate all of the parts of the finishedQ (readyQ should be empty already)
+    uthread_tcb *finished_thread = NULL;
+    while(queue_length(finishedQ) > 0) {
+        int dequeue_res = queue_dequeue(finishedQ, (void **)&finished_thread));
+        if (dequeue_res != 0) {
+            perror("Dequeue failed");
+            return;
+        }
+        uthread_ctx_destroy_stack(finished_thread->stack);
+        free(finished_thread);
+    }
+    // Destroy all queues
+    queue_destroy(readyQ);
+    queue_destroy(finishedQ);
+
+    return;
+}
 
 int uthread_run(bool preempt, uthread_func_t func, void *arg)
 {
@@ -173,48 +198,81 @@ int uthread_run(bool preempt, uthread_func_t func, void *arg)
 	}
 
     // create the main thread
+    // Set bool true so that main thread isn't enqueued
+    isMainThread = true;
     int threadVal = uthread_create(NULL, NULL);
-    // TODO: edit here
+    if (threadVal != 0) {
+        perror("cant create idle thread");
+        return -1;
+    }
+    // Other threads should be enqueued, so reset the bool
+    isMainThread = false;
 
 	// create the first thread
-	int threadVal = uthread_create(func, arg);
-	if (threadVal == -1) {
-		perror("cant create idle thread");
+	threadVal = uthread_create(func, arg);
+	if (threadVal != 0) {
+		perror("cant create new thread");
 		return -1;
 	}
 
 	// enable preemptive scheduling
 	// if(preempt){ /* do something ... */ }
 
-	fprintf(stderr, "thread count: %d\n", active_thread_count);
-
 	//while loop with original thread which runs as idle thread 
 	while(true) {
-        //yield execution to next ready thread
-        //uthread_yield();
-        uthread_yield();
+        cleanup();
 
         // break if only idle thread is left
-        if (queue_length(readyQ) == 1)
+        if (queue_length(readyQ) <= 0)
             break;
-	}
-	
-	fprintf(stderr, "thread count: %d\n", active_thread_count);
 
-    queue_destroy(readyQ);
-    // TODO: Uncomment below? Probably?
-//    free(tcb);
-//    free(current_thread_tcb);
+        // otherwise, yield to first ready thread
+        uthread_yield();
+	}
+
+    cleanup();
+    // TODO: If there are issues, we might need to handle mainThread cleanup
+    //  if so, remove the global bool and its mention in uthread_create
+    //  Then call dequeue() right after calling cleanup() to initialize the main_thread_tcb ptr
+    //  Then call ctx_destroy_stack(mainThread->stack) and free(mainThread)
+
 	return 0;
 }
 
 void uthread_block(void)
 {
-	/* TODO Phase 3 */
+    // save current thread context to ensure we can resume it later
+    // assuming current_thread was properly initialized:
+    previous_thread_tcb = current_thread_tcb;
+
+    // New thread will transition from ready->blocked
+    int dequeue_res = queue_dequeue(readyQ, (void **)&current_thread_tcb);
+    if (dequeue_res == -1){
+        perror("Yield: Queue is empty, no thread to switch to\n");
+        return;
+    }
+
+    // Update global thread states
+    previous_thread_tcb->state = UTHREAD_BLOCKED;
+    current_thread_tcb->state = UTHREAD_RUNNING;
+
+    // Perform the context switch
+    uthread_ctx_switch(&previous_thread_tcb->context, &current_thread_tcb->context);
+
+    // Never come here
+    assert(0);
 }
 
 void uthread_unblock(struct uthread_tcb *uthread)
 {
-	/* TODO Phase 3 */
+    uthread->state = UTHREAD_READY;
+    // Old thread will transition from running->ready
+    int enqueue_res = queue_enqueue(readyQ, uthread);
+    if (enqueue_res != 0) {
+        perror("Enqueue failed\n");
+        return;
+    }
+
+    assert(0);
 }
 
