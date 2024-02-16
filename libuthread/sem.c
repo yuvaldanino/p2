@@ -7,8 +7,9 @@
 #include "private.h"
 
 struct semaphore {
-	/* TODO Phase 3 */
+	//num resources 
 	int count;
+	//threads waiting for sem
 	queue_t semQueue;
 }semaphore;
 
@@ -20,7 +21,7 @@ sem_t sem_create(size_t count)
 		perror("no mem for semaphore");
 		return NULL;
 	}
-	//set count
+	//set count to number of avilable resources 
 	sem->count = count;
 	//make thread queue
 	sem->semQueue = queue_create();
@@ -28,7 +29,7 @@ sem_t sem_create(size_t count)
 		perror("sem queue not created");
 		return NULL;
 	}
-
+	
 	return sem;
 
 }
@@ -40,7 +41,6 @@ int sem_destroy(sem_t sem)
 	if(sem == NULL){
 		return -1;
 	}
-
 	// not more threads
 	if(queue_length(sem->semQueue) > 0){
 		perror("still waiting threads; unsafe to destroy sem");
@@ -56,22 +56,23 @@ int sem_destroy(sem_t sem)
 
 int sem_down(sem_t sem)
 {
-	/* TODO Phase 3 */
 	if(sem == NULL){
 		return -1;
 	}
-	
-	//free
+	//free resource
 	if(sem->count > 0){
-		//make it locked
+		//lock the resource and exec
 		sem->count--;
 	}else{
+		//when thread wants resource but cant access because already used 
 		struct uthread_tcb *curr_thread = uthread_current();
+		//add thread to waiting for sem queue
 		int enqueue_res = queue_enqueue(sem->semQueue, curr_thread);
 		if (enqueue_res != 0) {
 			perror("Enqueue failed\n");
 			return -1;
     	}
+		//block the thread as it wait for resource
 		uthread_block();
 	}
 
@@ -81,27 +82,24 @@ int sem_down(sem_t sem)
 
 int sem_up(sem_t sem)
 {
-	/* TODO Phase 3 */
 	if(sem == NULL){
 		return -1;
 	}
 	//release sem
-	
-	// Enter critical section (lock)
+	// if there are sem to execute 
     if (queue_length(sem->semQueue) > 0) {
         // Dequeue and unblock the next waiting thread
         struct uthread_tcb *wait_thread;
         int dequeue_res = queue_dequeue(sem->semQueue, (void **)&wait_thread);
         if (dequeue_res == 0) {
             uthread_unblock(wait_thread);
-            // Do not increment sem->count here, as the unblocked thread will consume the semaphore
         } else {
             perror("Queue dequeue failed\n");
-            // Exit critical section (unlock)
             return -1;
         }
     } else {
-        sem->count++; // Only increment if no threads were waiting
+		//if nothing to run then indicate resources are avilable 
+        sem->count++; 
     }
 
 	return 0;

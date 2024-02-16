@@ -229,6 +229,8 @@ int uthread_run(bool preempt, uthread_func_t func, void *arg)
 	// enable preemptive scheduling
 	// if(preempt){ /* do something ... */ }
     
+    preempt_start(preempt);
+    
 
 	//while loop with original thread which runs as idle thread 
 	while(true) {
