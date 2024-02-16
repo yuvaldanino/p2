@@ -13,6 +13,11 @@ struct semaphore {
 	queue_t semQueue;
 }semaphore;
 
+
+// getting started with this section was a little difficult for me
+// used these resources for clearer explination and some tips and examples:
+// https://www.baeldung.com/cs/semaphore , https://www.geeksforgeeks.org/semaphores-in-process-synchronization/ , https://www.youtube.com/watch?v=ukM_zzrIeXs
+
 sem_t sem_create(size_t count)
 {
 	//mem for sem
@@ -59,7 +64,7 @@ int sem_down(sem_t sem)
 	if(sem == NULL){
 		return -1;
 	}
-	//free resource
+	//free resource?
 	if(sem->count > 0){
 		//lock the resource and exec
 		sem->count--;
