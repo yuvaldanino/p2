@@ -1,6 +1,6 @@
 CC := gcc
-CFLAGS := -Wall -Wextra -Werror -g
-#-Werror  treats warning as errors (supposed to go after wall)
+CFLAGS := -Wall -Wextra -Werror
+# CFLAGS += -g
 # Target 
 lib := libuthread.a
 
@@ -21,9 +21,9 @@ all: $(lib)
 -include $(deps)
 
 # Library compilation
-#use ar to create static lib 
+# use ar to create static lib 
 # got a little help online for this as i was confused how to link this makefile and the apps one 
-#  https://www.mkssoftware.com/docs/man1/ar.1.asp , https://stackoverflow.com/questions/29714300/what-does-the-rcs-option-in-ar-do
+# https://www.mkssoftware.com/docs/man1/ar.1.asp , https://stackoverflow.com/questions/29714300/what-does-the-rcs-option-in-ar-do
 $(lib): $(objs)
 	@echo "AR $@"
 	$(Q)ar rcs $@ $^
@@ -37,6 +37,6 @@ clean:
 	@echo "CLEAN"
 	$(Q)rm -f $(lib) $(objs) $(deps)
 
-#got help one this step, saw it recommended online, makes sure if files named clean or all theyll execute, make it so we can do make all/ make clean 
-#https://www.gnu.org/software/make/manual/html_node/Phony-Targets.html , https://stackoverflow.com/questions/2145590/what-is-the-purpose-of-phony-in-a-makefile
+# got help one this step, saw it recommended online, makes sure if files named clean or all theyll execute, make it so we can do make all/ make clean 
+# https://www.gnu.org/software/make/manual/html_node/Phony-Targets.html , https://stackoverflow.com/questions/2145590/what-is-the-purpose-of-phony-in-a-makefile
 .PHONY: all clean

@@ -103,7 +103,7 @@ int uthread_create(uthread_func_t func, void *arg)
 {
 	//create new tcb
 	struct uthread_tcb *tcb = malloc(sizeof(struct uthread_tcb));
-	if (tcb == NULL){
+	if (tcb == NULL) {
 		perror("failed new tcb");
 		return -1;
 	}

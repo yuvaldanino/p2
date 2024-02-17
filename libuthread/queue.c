@@ -3,6 +3,7 @@
 #include <string.h>
 
 #include "queue.h"
+#include <stdio.h> // perror
 
 typedef struct Node {
     // Linked list implementation
@@ -79,18 +80,17 @@ int queue_dequeue(queue_t queue, void **data)
         return -1;
     }
         
-
 	qNode *oldestNode = queue->front; // Since queue->front points to a node in the heap
 
     *data = oldestNode->data; // Deref to modify ptr by ref instead of value (data)
 
     queue->front = queue->front->next;
     queue->length--;
+
     // Rear is still pointing to the removed node in this case below
     if (queue->length == 0){
         queue->rear = NULL;
     }
-        
 
     // *data has the data, this node is no longer needed
     free(oldestNode);
@@ -151,7 +151,6 @@ int queue_length(queue_t queue)
     if (queue == NULL){
         return -1;
     }
-        
 
 	return queue->length;
 }
