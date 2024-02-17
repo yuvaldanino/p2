@@ -176,8 +176,21 @@ indicating a context switch as preemption is enabled.
         and does not diminish the overall efficiency and fairness of the 
         preemption mechanism.
 
-
-
-
-
-
+# Works Cited
+https://www.baeldung.com/cs/semaphore
+https://www.geeksforgeeks.org/semaphores-in-process-synchronization/
+https://www.youtube.com/watch?v=ukM_zzrIeXs
+https://www.youtube.com/watch?v=4DhFmL-6SDA
+http://courses.cms.caltech.edu/cs124/lectures-wi2016/CS124Lec15.pdf
+https://man7.org/linux/man-pages/man2/sigprocmask.2.html
+https://pubs.opengroup.org/onlinepubs/7908799/xsh/sigprocmask.html
+https://man7.org/linux/man-pages/man2/sigaction.2.html
+https://www.scaler.com/topics/c/implementation-of-queue-using-linked-list/
+https://man7.org/linux/man-pages/man3/sigemptyset.3p.html
+https://man7.org/linux/man-pages/man3/sigemptyset.3p.html
+https://pubs.opengroup.org/onlinepubs/007904875/functions/sigaction.html
+https://www.informit.com/articles/article.aspx?p=23618&seqNum=14
+https://www.ibm.com/docs/en/zos/2.4.0?topic=functions-setitimer-set-value-interval-timer
+https://man7.org/linux/man-pages/man2/setitimer.2.html
+https://stackoverflow.com/questions/10330837/catching-sigvtalrm-signal-cp
+https://www.gnu.org/software/libc/manual/html_node/Setting-an-Alarm.html

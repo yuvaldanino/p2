@@ -14,6 +14,8 @@ typedef struct Node {
 struct queue {
     int length;
     // Front and rear used for O(1) implementation (no looping thru queue)
+    // Naming inspiration from
+    // https://www.scaler.com/topics/c/implementation-of-queue-using-linked-list/
     qNode *front;
     qNode *rear;
 };
