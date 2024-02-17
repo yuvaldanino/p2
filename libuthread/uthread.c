@@ -19,37 +19,26 @@
 queue_t readyQ;
 queue_t finishedQ;
 
-typedef enum {
-	//states of threads
-	UTHREAD_RUNNING,
-	UTHREAD_READY,
-    UTHREAD_BLOCKED,
-	UTHREAD_FINISHED,
-} uthread_state;
-
 typedef struct uthread_tcb {
 	// define TCB block:
 	//to save exec content (backup of CPU register )
 	uthread_ctx_t context;
 	//threads stack pointer 
 	void* stack;
-	//current state of thread
-	uthread_state state;
 } uthread_tcb;
 
 // global ptrs for thread switching
-//uthread_tcb *main_tcb,
-//            *current_thread_tcb,
-//            *previous_thread_tcb;
-uthread_tcb *main_tcb = NULL;
-uthread_tcb *current_thread_tcb = NULL;
-uthread_tcb *previous_thread_tcb = NULL;
+uthread_tcb *main_tcb,
+            *current_thread_tcb,
+            *previous_thread_tcb;
 
+/*
+ * Getter used in semaphore API
+ */
 uthread_tcb* uthread_current()
 {
     return current_thread_tcb;
 }
-
 
 /*
  * uthread_yield - Yield execution
@@ -57,7 +46,6 @@ uthread_tcb* uthread_current()
  * This function is to be called from the currently active and running thread in
  * order to yield for other threads to execute.
  */
-
 void uthread_yield(void)
 {
 	// save current thread context to ensure we can resume it later
@@ -78,15 +66,8 @@ void uthread_yield(void)
         return;
     }
 
-    // Update global thread states
-    previous_thread_tcb->state = UTHREAD_READY;
-    current_thread_tcb->state = UTHREAD_RUNNING;
-
     // Perform the context switch
     uthread_ctx_switch(&previous_thread_tcb->context, &current_thread_tcb->context);
-
-    // Never come here
-    //assert(0);
 }
 
 // Same as yield(), but the old process is done, not ready, so it goes in a different queue
@@ -110,20 +91,14 @@ void uthread_exit(void)
         return;
     }
 
-    // Update global thread states
-    previous_thread_tcb->state = UTHREAD_FINISHED;
-    current_thread_tcb->state = UTHREAD_RUNNING;
-
     // Perform the context switch
     // No need to save the current context since we're not coming back
     setcontext(&current_thread_tcb->context);
-
-//    uthread_ctx_switch(&previous_thread_tcb->context, &current_thread_tcb->context);
-
-    // Never come here
-    //assert(0);
 }
 
+/*
+ * Create, initialize, and enqueue a thread
+ */
 int uthread_create(uthread_func_t func, void *arg)
 {
 	//create new tcb
@@ -150,9 +125,6 @@ int uthread_create(uthread_func_t func, void *arg)
         return -1;
     }
 
-	// If init successful, change thread to ready
-	tcb->state = UTHREAD_READY;
-
 	// Schedule to ready queue
 	int enqueue_res = queue_enqueue(readyQ, tcb);
     if (enqueue_res == -1) {
@@ -165,12 +137,10 @@ int uthread_create(uthread_func_t func, void *arg)
 	return 0;
 }
 
-
-
 // Helper func to destroy finishedQ and readyQ
 void cleanup()
 {
-    // Deallocate all of the parts of the finishedQ (readyQ should be empty already)
+    // Deallocate all the parts of the finishedQ (readyQ should be empty already)
     struct uthread_tcb *finished_thread = NULL;
     while(queue_length(finishedQ) > 0) {
         int dequeue_res = queue_dequeue(finishedQ, (void **)&finished_thread);
@@ -191,9 +161,11 @@ void cleanup()
     return;
 }
 
+/*
+ * Create main/idle thread, 1st thread, then yield until threads complete
+ */
 int uthread_run(bool preempt, uthread_func_t func, void *arg)
 {
-
 	// initialize ready and finished threads queues
 	readyQ = queue_create();
     finishedQ = queue_create();
@@ -216,7 +188,6 @@ int uthread_run(bool preempt, uthread_func_t func, void *arg)
     }
 
     current_thread_tcb = main_tcb;
-    current_thread_tcb->state = UTHREAD_RUNNING;
     previous_thread_tcb = current_thread_tcb;
 
 	// create the first thread
@@ -227,10 +198,7 @@ int uthread_run(bool preempt, uthread_func_t func, void *arg)
 	}
 
 	// enable preemptive scheduling
-	// if(preempt){ /* do something ... */ }
-    
     preempt_start(preempt);
-    
 
 	//while loop with original thread which runs as idle thread 
 	while(true) {
@@ -247,6 +215,7 @@ int uthread_run(bool preempt, uthread_func_t func, void *arg)
 	return 0;
 }
 
+// For semaphore api
 void uthread_block(void)
 {
     // save current thread context to ensure we can resume it later
@@ -255,32 +224,23 @@ void uthread_block(void)
 
     // New thread will transition from ready->blocked
     int dequeue_res = queue_dequeue(readyQ, (void **)&current_thread_tcb);
-    if (dequeue_res == -1){
+    if (dequeue_res == -1) {
         perror("Yield: Queue is empty, no thread to switch to\n");
         return;
     }
 
-    // Update global thread states
-    previous_thread_tcb->state = UTHREAD_BLOCKED;
-    current_thread_tcb->state = UTHREAD_RUNNING;
-
     // Perform the context switch
     uthread_ctx_switch(&previous_thread_tcb->context, &current_thread_tcb->context);
-
-    // Never come here
-    //assert(0);
 }
 
+// For semaphore api
 void uthread_unblock(struct uthread_tcb *uthread)
 {
-    uthread->state = UTHREAD_READY;
     // Old thread will transition from running->ready
     int enqueue_res = queue_enqueue(readyQ, uthread);
     if (enqueue_res != 0) {
         perror("Enqueue failed\n");
         return;
     }
-
-    //assert(0);
 }
 

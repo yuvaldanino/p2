@@ -3,7 +3,6 @@
 #include <string.h>
 
 #include "queue.h"
-#include <stdio.h> // TODO: DELETE
 
 typedef struct Node {
     // Linked list implementation
@@ -157,16 +156,15 @@ int queue_length(queue_t queue)
 	return queue->length;
 }
 
-// TODO: Del
+// Helper function for debugging
 int queue_print(queue_t queue)
 {
-    printf("## START QUEUE INFO ##\n");
     if (queue == NULL) {
-        printf("Queue null\n");
+        perror("Queue null\n");
         return -1;
     }
     if (queue->length == 0) {
-        printf("Queue empty\n");
+        perror("Queue empty\n");
         return -1;
     }
 
@@ -176,16 +174,14 @@ int queue_print(queue_t queue)
     while(currNode != NULL) {
         nextNode = currNode->next;
 
-        int *currData = currNode->data;
-        printf("Index: %d | Addr: %p | Value: %d\n", index, currData, *currData);
-
         currNode = nextNode;
         index++;
     }
-    printf("## END QUEUE INFO ##\n");
 
     return 0;
 }
+
+// Helper function to use the queue in the testers
 int use_q(queue_t queue)
 {
     if (queue != NULL) {

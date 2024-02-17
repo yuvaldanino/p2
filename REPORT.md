@@ -48,31 +48,31 @@
     - Thread that require more resouces for longer hold timer may cause long 
     wait times for other threads.
 - Scalability Concern
-    - With a higher number of threads, managing the queue will become constly
+    - With a higher number of threads, managing the queue will become costly
 - Priority 
     - Since we have a FIFO queue, higher priority threads wait for lower ones
 # Phase 4 Preemption 
-### High Level Desciption:
-- Allows threads to preemptively siwtch to ensure fair CPU time. 
+### High Level Description:
+- Allows threads to preemptively switch to ensure fair CPU time. 
 - Uses signals (SIGVTALRM) and virtual timers to periodically interrupt thread 
 exec, which enables scheduling. 
 ### Design Choices and Implementation Details:
 - Signal Handling 
     - Signal setup (in preempt_start):
-        - configure 'SIGVTALRM' to trigger the singal_handler_function which is 
-        linked to uthread_yield(). Thus when 'SIGVTALRM' is triggered, the 
+        - configure 'SIGVTALRM' to trigger the signal_handler_function which is 
+        linked to uthread_yield(). Thus, when 'SIGVTALRM' is triggered, the 
         thread yields and we can go to exec the next thread
         - Rational:
-            - Provide a controlled way to interuppt the threads using the 
-            'SIGVTALRM' signal to enforce context switching. More fiar 
-            allocation. 
+            - Provide a controlled way to interrupt the threads using the 
+            'SIGVTALRM' signal to enforce context switching. 
+            - More fair allocation. 
 - Timer configuration (in preempt_start):
     - Virtual Timer
         - intializes a virtual timer (ITIMER_VIRTUAL) to generate SIGVTALRM 
         signals at a frequency defined by HZ.
         - Rational:
-            - This ensures preemption as threads are contantly yielding with the 
-            SIGVTALRM signal. Allows systen to freq release thread running. 
+            - This ensures preemption as threads are constantly yielding with 
+            the SIGVTALRM signal. Allows systen to freq release thread running. 
 - Preemption control:
     - disable preemption (in preempt_disable):  
         - blocks SIGVTALRM signal, thus preventing the yield action
