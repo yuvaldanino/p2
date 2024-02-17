@@ -143,6 +143,7 @@ void cleanup()
     // Deallocate all the parts of the finishedQ (readyQ should be empty already)
     struct uthread_tcb *finished_thread = NULL;
     while(queue_length(finishedQ) > 0) {
+        // Not using queue_delete because don't want to search for specific data
         int dequeue_res = queue_dequeue(finishedQ, (void **)&finished_thread);
         if (dequeue_res != 0) {
             perror("Dequeue failed");
